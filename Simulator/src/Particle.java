@@ -1,4 +1,10 @@
 import java.awt.Color;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import org.opensourcephysics.display.Circle;
 import org.opensourcephysics.display.Trail;
@@ -7,55 +13,36 @@ import org.opensourcephysics.display.Trail;
  * @author Russell Kaplan
  *
  */
-public class Particle extends Circle {
+public class Particle extends Circle implements Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	//for data in arrays, [0] stores the value for x, and [1] for y:
 	private double[] vel;
 	private double[] accel;
 	private Trail trail;
 
-	/**
-	 * Creates a new Particle object with the specified initial values.
-	 * @param x The initial X coordinate of the Particle
-	 * @param y The initial Y coordinate of the Particle
-	 */
-	public Particle(double x, double y) {
-		super(x, y);
+	public Particle(double x, double y, int radius) {
+		super(x, y, radius);
 
 		trail = new Trail();
 		trail.addPoint(x, y);
 	}
 	
-	/**
-	 * Creates a new Particle object with the specified initial values.
-	 * @param x The initial X coordinate of the Particle
-	 * @param y The initial Y coordinate of the Particle
-	 * @param xVel The initial X velocity of the Particle
-	 * @param yVel The initial Y Velocity of the Particle
-	 */
-	public Particle(double x, double y, double xVel, double yVel) {
-		this(x, y);
+	public Particle(double x, double y, int radius, double xVel, double yVel) {
+		this(x, y, radius);
 		
 		vel = new double[] {xVel, yVel};
 		accel = new double[] {0, 0};
 	}
 	
-	/**
-	 * Creates a new Particle object with the specified initial values.
-	 * @param x The initial X coordinate of the Particle
-	 * @param y The initial Y coordinate of the Particle
-	 * @param xVel The initial velocity of the Particle in the X direction
-	 * @param yVel The initial Velocity of the Particle in the Y direction
-	 * @param xAccel The initial acceleration of the Particle in the X direction
-	 * @param yAccel The initial acceleration of the Particle in the Y direction
-	 */
-	public Particle(double x, double y, double xVel, double yVel, double xAccel, double yAccel) {
-		this(x, y, xVel, yVel);
+	public Particle(double x, double y, int radius, double xVel, double yVel, double xAccel, double yAccel) {
+		this(x, y, radius, xVel, yVel);
 		accel = new double[] {xAccel, yAccel};
 	}
 	
 	public void moveStep(double timeInterval) {
-		//update accelerations and velocities:
+		//update velocities:
 		for(int i = 0; i < vel.length; i++) {
 			vel[i] = vel[i] + accel[i] * timeInterval; //update the velocity based on acceleration
 		}
@@ -100,20 +87,41 @@ public class Particle extends Circle {
 		accel[1] = yAccel;
 	}
 	
-	/**
-	 * Get the moving Object's trail.
-	 * @return
-	 */
 	public Trail getTrail() {
 		return trail;
 	}
 	
-	/**
-	 * Set the color of the moving Object's trail.
-	 * @param c The new trail color
-	 */
+	public void setTrail(Trail trail) {
+		this.trail = trail;
+	}
+	
 	public void setTrailColor(Color c) {
 		trail.color = c;
+	}
+	
+	public Particle deepCopy() {
+		Particle copy = null;
+		
+		//serialize the Particle and unpack the bytecode to create a deep copy:
+		try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+            out.writeObject(this);
+            out.flush();
+            out.close();
+
+            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+            copy = (Particle)in.readObject();
+            in.close();
+        }
+        catch(IOException e) {
+            e.printStackTrace();
+        }
+        catch(ClassNotFoundException cnfe) {
+            cnfe.printStackTrace();
+        }
+		
+        return copy;
 	}
 
 //	//helpers:
