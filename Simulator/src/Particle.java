@@ -18,27 +18,22 @@ public class Particle extends Circle implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	//for data in arrays, [0] stores the value for x, and [1] for y:
+	private String name;
 	private double[] vel;
 	private double[] accel;
 	private Trail trail;
 
-	public Particle(double x, double y, int radius) {
-		super(x, y, radius);
-
-		trail = new Trail();
-		trail.addPoint(x, y);
-	}
-	
-	public Particle(double x, double y, int radius, double xVel, double yVel) {
-		this(x, y, radius);
+	public Particle(String name, double x, double y, double xVel, double yVel, int pixRadius, Color color) {
+		super(x, y, pixRadius);
+		this.name = name;
+		this.color = color;
+		this.pixRadius = pixRadius;
 		
-		vel = new double[] {xVel, yVel};
-		accel = new double[] {0, 0};
-	}
-	
-	public Particle(double x, double y, int radius, double xVel, double yVel, double xAccel, double yAccel) {
-		this(x, y, radius, xVel, yVel);
-		accel = new double[] {xAccel, yAccel};
+		this.vel = new double[] {xVel, yVel};
+		this.accel = new double[] {0, 0};
+		
+		this.trail = new Trail();
+		this.trail.addPoint(x, y);
 	}
 	
 	public void moveStep(double timeInterval) {
@@ -53,6 +48,14 @@ public class Particle extends Circle implements Serializable {
 		
 		//update the trail:
 		trail.addPoint(x, y);
+	}
+	
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public double getXVel() {
