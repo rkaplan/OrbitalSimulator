@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -68,6 +69,8 @@ public class OrbitalSimulation extends AbstractSimulation {
 	@Override
 	public void initialize() {
 		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
+		frame.setSize(new Dimension(800, 600));
+		frame.setLocation(0, 0);
 		frame.setVisible(true);
 		this.setDelayTime(10);
 		

@@ -35,6 +35,7 @@ public class Particle extends Circle implements Serializable {
 		this.mass = mass;
 		
 		this.trail = new SerializableTrail();
+		this.trail.color = color;
 		this.trail.addPoint(x, y);
 	}
 	
