@@ -21,9 +21,10 @@ public class Particle extends Circle implements Serializable {
 	private String name;
 	private double[] vel;
 	private double[] accel;
-	private Trail trail;
+	private double mass;
+	private SerializableTrail trail;
 
-	public Particle(String name, double x, double y, double xVel, double yVel, int pixRadius, Color color) {
+	public Particle(String name, double x, double y, double xVel, double yVel, double mass, int pixRadius, Color color) {
 		super(x, y, pixRadius);
 		this.name = name;
 		this.color = color;
@@ -31,8 +32,9 @@ public class Particle extends Circle implements Serializable {
 		
 		this.vel = new double[] {xVel, yVel};
 		this.accel = new double[] {0, 0};
+		this.mass = mass;
 		
-		this.trail = new Trail();
+		this.trail = new SerializableTrail();
 		this.trail.addPoint(x, y);
 	}
 	
@@ -90,12 +92,24 @@ public class Particle extends Circle implements Serializable {
 		accel[1] = yAccel;
 	}
 	
+	public double getMass() {
+		return mass;
+	}
+	
+	public void setMass(double mass) {
+		this.mass = mass;
+	}
+	
 	public Trail getTrail() {
 		return trail;
 	}
 	
-	public void setTrail(Trail trail) {
+	public void setTrail(SerializableTrail trail) {
 		this.trail = trail;
+	}
+	
+	public Color getTrailColor() {
+		return this.trail.color;
 	}
 	
 	public void setTrailColor(Color c) {
