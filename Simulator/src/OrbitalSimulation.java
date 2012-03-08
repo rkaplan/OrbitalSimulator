@@ -6,11 +6,16 @@ import java.util.Stack;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 import org.opensourcephysics.controls.SimulationControl;
+import org.opensourcephysics.display.BoundedShape;
 import org.opensourcephysics.frames.DisplayFrame;
 
 
 public class OrbitalSimulation extends AbstractSimulation {
 
+	private static final boolean DEBUG = false;
+	
+	private static final int[] FRAME_LOCATION = {0, 0};
+	
 	private DisplayFrame frame;
 	private Stack<SimulationState> states;
 	private List<Particle> particles;
@@ -19,19 +24,24 @@ public class OrbitalSimulation extends AbstractSimulation {
 	private double timeInterval;
 	private double gravConstant;
 	
+//	BoundedShape myCircle;
+	
 	@Override
 	protected void doStep() {
 		updateAccelerations();
 		moveParticles();
 		
 		timeElapsed += timeInterval;
+		
+//		if(myCircle.isSelected()) System.out.println("Selected!");
+//		else System.out.println("NOPE");
 	}
 	
 	private void updateAccelerations() {
 		Particle cur;
 		double sumXForces;
 		double sumYForces;
-		System.out.println("Sum of forces of each particle: ");
+		if(DEBUG) System.out.println("Sum of forces of each particle: ");
 		for(int i = 0; i < particles.size(); i++) {
 			cur = particles.get(i);
 			sumXForces = sumYForces = 0;
@@ -40,7 +50,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 				sumXForces += forceOfGravityX(cur.getMass(), cur.getX(), cur.getY(), particles.get(j).getMass(), particles.get(j).getX(), particles.get(j).getY());
 				sumYForces += forceOfGravityY(cur.getMass(), cur.getX(), cur.getY(), particles.get(j).getMass(), particles.get(j).getX(), particles.get(j).getY());
 			}
-			System.out.println("Particle " + i + ": X = " + sumXForces + ", Y = " + sumYForces);
+			if(DEBUG) System.out.println("Particle " + i + ": X = " + sumXForces + ", Y = " + sumYForces);
 			cur.setXAccel(sumXForces / cur.getMass());
 			cur.setYAccel(sumYForces / cur.getMass());
 		}
@@ -70,7 +80,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 	public void initialize() {
 		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
 		frame.setSize(new Dimension(800, 600));
-		frame.setLocation(0, 0);
+		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
 		frame.setVisible(true);
 		this.setDelayTime(10);
 		
@@ -94,6 +104,12 @@ public class OrbitalSimulation extends AbstractSimulation {
 		timeElapsed = 0;
 		timeInterval = control.getDouble("Time Interval");
 		gravConstant = 6.67;
+		
+		
+		//testing
+//		myCircle = BoundedShape.createBoundedCircle(0, 0, 2);
+//		frame.addDrawable(myCircle);
+		
 	}
 
 	public static void main(String[] args) {
