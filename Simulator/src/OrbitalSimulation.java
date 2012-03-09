@@ -6,7 +6,6 @@ import java.util.Stack;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 import org.opensourcephysics.controls.SimulationControl;
-import org.opensourcephysics.display.BoundedShape;
 import org.opensourcephysics.frames.DisplayFrame;
 
 
@@ -24,17 +23,16 @@ public class OrbitalSimulation extends AbstractSimulation {
 	private double timeInterval;
 	private double gravConstant;
 	
-//	BoundedShape myCircle;
-	
 	@Override
 	protected void doStep() {
 		updateAccelerations();
 		moveParticles();
 		
 		timeElapsed += timeInterval;
-		
-//		if(myCircle.isSelected()) System.out.println("Selected!");
-//		else System.out.println("NOPE");
+	}
+	
+	public void addPlanet() {
+		System.out.println("\n\nPLANET ADDED\n\n");
 	}
 	
 	private void updateAccelerations() {
@@ -60,6 +58,29 @@ public class OrbitalSimulation extends AbstractSimulation {
 		for(int i = 0; i < particles.size(); i++) {
 			particles.get(i).moveStep(timeInterval);
 		}
+		
+		for(int i = 0; i < particles.size(); i++) {
+			for(int j = i+1; j < particles.size(); j++) {
+				if(particles.get(i).hasCollidedWith(particles.get(j))) {
+					Particle p1 = particles.get(i);
+					Particle p2 = particles.get(j);
+					Particle merged = Particle.createParticleFromCollision(p1, p2);
+					
+					frame.removeDrawable(p1);
+					frame.removeDrawable(p1.getTrail());
+					frame.removeDrawable(p2);
+					frame.removeDrawable(p2.getTrail());
+					frame.addDrawable(merged);
+					frame.addDrawable(merged.getTrail());
+					
+					particles.remove(p1);
+					particles.remove(p2);
+					particles.add(merged);
+					
+//					control.calculationDone("collision!");
+				}
+			}
+		}
 	}
 	
 	/**
@@ -79,6 +100,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 	@Override
 	public void initialize() {
 		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
+		frame.addButton("addPlanet", "Add a planet", "tooltiptext!", this);
 		frame.setSize(new Dimension(800, 600));
 		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
 		frame.setVisible(true);
@@ -87,7 +109,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 		Particle initial = new Particle(control.getString("Name"), control.getDouble("X"), control.getDouble("Y"),
 				control.getDouble("X Velocity"), control.getDouble("Y Velocity"), 10, control.getInt("Radius"), Color.RED);
 		
-		Particle second = new Particle("Test", 0, 0, 0, -.5, 100, 10, Color.BLUE);
+		Particle second = new Particle("Test", 0, 0, 0, 2, 100, 10, Color.BLUE);
 		
 		particles = new ArrayList<Particle>();
 		particles.add(initial);
@@ -104,16 +126,6 @@ public class OrbitalSimulation extends AbstractSimulation {
 		timeElapsed = 0;
 		timeInterval = control.getDouble("Time Interval");
 		gravConstant = 6.67;
-		
-		
-		//testing
-//		myCircle = BoundedShape.createBoundedCircle(0, 0, 2);
-//		frame.addDrawable(myCircle);
-		
-	}
-
-	public static void main(String[] args) {
-		SimulationControl.createApp(new OrbitalSimulation());
 	}
 	
 	private double forceOfGravityX(double m1, double x1, double y1, double m2, double x2, double y2) {
@@ -126,6 +138,10 @@ public class OrbitalSimulation extends AbstractSimulation {
 	
 	private static double distance(double x1, double y1, double x2, double y2) {
 		return Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+	}
+
+	public static void main(String[] args) {
+		SimulationControl.createApp(new OrbitalSimulation());
 	}
 	
 }
