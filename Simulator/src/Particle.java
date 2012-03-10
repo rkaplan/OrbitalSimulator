@@ -67,7 +67,12 @@ public class Particle extends Circle implements Serializable {
 		double p2area = Math.PI * Math.pow(p2.getPixRadius(), 2);
 		int newPixRadius = (int)Math.ceil(Math.sqrt((p1area + p2area) / Math.PI));
 		
-		return new Particle("Planet", p1.getX(), p1.getY(), newXVel, newYVel, p1.getMass() + p2.getMass(), newPixRadius, Color.GRAY);
+		//determine new color by mixing the colors of the two particles:
+		Color newColor = new Color((p1.getColor().getRed() + p2.getColor().getRed()) / 2, 
+				(p1.getColor().getGreen() + p2.getColor().getGreen()) / 2, 
+				(p1.getColor().getGreen() + p2.getColor().getGreen()) / 2);
+		
+		return new Particle("Planet", p1.getX(), p1.getY(), newXVel, newYVel, p1.getMass() + p2.getMass(), newPixRadius, newColor);
 	}
 
 	public String getName() {
@@ -117,6 +122,15 @@ public class Particle extends Circle implements Serializable {
 	public void setMass(double mass) {
 		this.mass = mass;
 	}
+	
+	public Color getColor() {
+		return color;
+	}
+	
+	public void setColor(Color color) {
+		this.color = color;
+		this.trail.color = color;
+	}
 
 	public Trail getTrail() {
 		return trail;
@@ -124,14 +138,6 @@ public class Particle extends Circle implements Serializable {
 
 	public void setTrail(SerializableTrail trail) {
 		this.trail = trail;
-	}
-
-	public Color getTrailColor() {
-		return this.trail.color;
-	}
-
-	public void setTrailColor(Color c) {
-		trail.color = c;
 	}
 	
 	public int getPixRadius() {

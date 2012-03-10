@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Stack;
 
 import org.opensourcephysics.controls.AbstractSimulation;
@@ -15,9 +16,10 @@ public class OrbitalSimulation extends AbstractSimulation {
 	
 	private static final int[] FRAME_LOCATION = {0, 0};
 	
-	private DisplayFrame frame;
-	private Stack<SimulationState> states;
-	private List<Particle> particles;
+	protected DisplayFrame frame;
+	protected Stack<SimulationState> states;
+	protected List<Particle> particles;
+	protected ParticleMouseController pmc;
 	
 	private double timeElapsed;
 	private double timeInterval;
@@ -29,10 +31,8 @@ public class OrbitalSimulation extends AbstractSimulation {
 		moveParticles();
 		
 		timeElapsed += timeInterval;
-	}
-	
-	public void addPlanet() {
-		System.out.println("\n\nPLANET ADDED\n\n");
+//		for(Particle p : particles) System.out.print(p.getName() + " ");
+//		System.out.println();
 	}
 	
 	private void updateAccelerations() {
@@ -76,8 +76,6 @@ public class OrbitalSimulation extends AbstractSimulation {
 					particles.remove(p1);
 					particles.remove(p2);
 					particles.add(merged);
-					
-//					control.calculationDone("collision!");
 				}
 			}
 		}
@@ -100,10 +98,14 @@ public class OrbitalSimulation extends AbstractSimulation {
 	@Override
 	public void initialize() {
 		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
-		frame.addButton("addPlanet", "Add a planet", "tooltiptext!", this);
-		frame.setSize(new Dimension(800, 600));
 		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
 		frame.setVisible(true);
+		frame.setSize(new Dimension(800, 600));
+		
+		pmc = new ParticleMouseController(this);
+		frame.getDrawingPanel().addMouseListener(pmc);
+		frame.getDrawingPanel().addMouseMotionListener(pmc);
+		
 		this.setDelayTime(10);
 		
 		Particle initial = new Particle(control.getString("Name"), control.getDouble("X"), control.getDouble("Y"),
