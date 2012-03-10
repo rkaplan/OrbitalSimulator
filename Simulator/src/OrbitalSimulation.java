@@ -19,7 +19,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 	protected DisplayFrame frame;
 	protected Stack<SimulationState> states;
 	protected List<Particle> particles;
-	protected ParticleMouseController pmc;
+	protected ParticleMouseController pmc; //for detecting MouseEvents and triggering appropriate OrbitalSimulation responses
 	
 	private double timeElapsed;
 	private double timeInterval;
@@ -31,8 +31,6 @@ public class OrbitalSimulation extends AbstractSimulation {
 		moveParticles();
 		
 		timeElapsed += timeInterval;
-//		for(Particle p : particles) System.out.print(p.getName() + " ");
-//		System.out.println();
 	}
 	
 	private void updateAccelerations() {
@@ -100,7 +98,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
 		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
 		frame.setVisible(true);
-		frame.setSize(new Dimension(800, 600));
+		frame.setSize(new Dimension(500, 500));
 		
 		pmc = new ParticleMouseController(this);
 		frame.getDrawingPanel().addMouseListener(pmc);
