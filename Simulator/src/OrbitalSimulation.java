@@ -166,6 +166,8 @@ public class OrbitalSimulation extends AbstractSimulation {
 				"Load a simulation from a .orbital file", this);
 		frame.addButton("saveState", "Save", 
 				"Save the current simulation to a file", this);
+		frame.addButton("clearSimulation", "Clear", 
+				"Clear all contents of the simulation", this);
 		frame.addButton("toggleCollisionType", "Toggle Elastic / Inelastic Collisions", 
 				"Change whether particles bounce off of each other or merge when they collide", this);
 		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
@@ -233,6 +235,10 @@ public class OrbitalSimulation extends AbstractSimulation {
 			states.push(currentState());
 			states.peek().save(file);
 		}
+	}
+	
+	public void clearSimulation() {
+		pushCurrentStateAndRevertToState(new SimulationState(new ArrayList<Particle>(), timeElapsed, timeInterval, gravConstant, elasticCollisions));
 	}
 	
 	public void toggleCollisionType() {
