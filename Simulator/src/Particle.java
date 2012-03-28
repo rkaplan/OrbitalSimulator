@@ -23,6 +23,7 @@ public class Particle extends Circle implements Serializable {
 	private double[] accel;
 	private double mass;
 	private SerializableTrail trail;
+	private Particle latestCollision; //for ensuring the same collision is not processed multiple times
 
 	public Particle(String name, double x, double y, double xVel, double yVel, double mass, int pixRadius, Color color) {
 		super(x, y, pixRadius);
@@ -37,9 +38,12 @@ public class Particle extends Circle implements Serializable {
 		this.trail = new SerializableTrail();
 		this.trail.color = color;
 		this.trail.addPoint(x, y);
+
+		this.latestCollision = null; //hasn't collided with any particles yet
 	}
 
 	public void moveStep(double timeInterval) {
+		
 		//update velocities:
 		for(int i = 0; i < vel.length; i++) {
 			vel[i] = vel[i] + accel[i] * timeInterval; //update the velocity based on acceleration
@@ -51,27 +55,44 @@ public class Particle extends Circle implements Serializable {
 
 		//update the trail:
 		trail.addPoint(x, y);
+		
+//		System.out.println("\tAfter stepping:");
+//		System.out.println("\tCoords: " + x + ", " + y);
+//		System.out.println("\tLatest collision is null? " + Boolean.toString(latestCollision == null));
+		
+		//check to see if the particle from the previous collision is outside of the collision detection range,
+		//indicating that future collisions with that particle should be handled normally and no longer ignored:
+		if(latestCollision != null) {
+			if(!(Math.abs(x - latestCollision.getX()) < .5 && Math.abs(y - latestCollision.getY()) < .5))
+				latestCollision = null;
+				//TODO: handle when latestCollision is removed from the simulation (e.g. from inelastic collision)
+		}
+
 	}
 
-	public boolean hasCollidedWith(Particle p) {
-		return Math.abs(x - p.getX()) < .5 && Math.abs(y - p.getY()) < .5;
-	}
-
+	/**
+	 * Creates a <code>Particle</code> that represents the outcome of a
+	 * perfectly inelastic collision between <code>p1</code> and
+	 * <code>p2</code>.
+	 * @param p1
+	 * @param p2
+	 * @return The <code>Particle</code> created from the collision
+	 */
 	public static Particle createParticleFromCollision(Particle p1, Particle p2) {
 		//use conservation of momentum to find new velocities:
 		double newXVel = (p1.getMass() * p1.getXVel() + p2.getMass() * p2.getXVel()) / (p1.getMass() + p2.getMass());
 		double newYVel = (p1.getMass() * p1.getYVel() + p2.getMass() * p2.getYVel()) / (p1.getMass() + p2.getMass());
-		
+
 		//find the areas of each circle to determine the radius of the new Particle (whose area will be the sum of those two areas):
 		double p1area = Math.PI * Math.pow(p1.getPixRadius(), 2);
 		double p2area = Math.PI * Math.pow(p2.getPixRadius(), 2);
 		int newPixRadius = (int)Math.ceil(Math.sqrt((p1area + p2area) / Math.PI));
-		
+
 		//determine new color by mixing the colors of the two particles:
 		Color newColor = new Color((p1.getColor().getRed() + p2.getColor().getRed()) / 2, 
 				(p1.getColor().getGreen() + p2.getColor().getGreen()) / 2, 
 				(p1.getColor().getGreen() + p2.getColor().getGreen()) / 2);
-		
+
 		return new Particle("Planet", p1.getX(), p1.getY(), newXVel, newYVel, p1.getMass() + p2.getMass(), newPixRadius, newColor);
 	}
 
@@ -122,11 +143,11 @@ public class Particle extends Circle implements Serializable {
 	public void setMass(double mass) {
 		this.mass = mass;
 	}
-	
+
 	public Color getColor() {
 		return color;
 	}
-	
+
 	public void setColor(Color color) {
 		this.color = color;
 		this.trail.color = color;
@@ -139,13 +160,21 @@ public class Particle extends Circle implements Serializable {
 	public void setTrail(SerializableTrail trail) {
 		this.trail = trail;
 	}
-	
+
 	public int getPixRadius() {
 		return pixRadius;
 	}
-	
+
 	public void setPixRadius(int pixRadius) {
 		this.pixRadius = pixRadius;
+	}
+	
+	public Particle getLatestCollision() {
+		return latestCollision;
+	}
+	
+	public void setLatestCollision (Particle p) {
+		this.latestCollision = p;
 	}
 
 	public Particle deepCopy() {

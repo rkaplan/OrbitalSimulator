@@ -16,11 +16,13 @@ public class ParticleMouseController extends MouseInputAdapter {
 	private Particle temp;
 	private double[] mousePressedCoords;
 	private long timeMousePressed;
+	private boolean planetAddMode;
 	final private static Color[] PLANET_SPAWN_COLORS = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.ORANGE, Color.MAGENTA};
 	
 	public ParticleMouseController(OrbitalSimulation simulation) {
 		this.simulation = simulation;
 		coordinateStrBuilder = CoordinateStringBuilder.createCartesian();
+		planetAddMode = false;
 		temp = null;
 	}
 	
@@ -42,13 +44,19 @@ public class ParticleMouseController extends MouseInputAdapter {
 	@Override
 	public void mousePressed(MouseEvent e) {
 		System.out.println("press!");
-		mousePressedCoords = getCoords(e);
-		timeMousePressed = System.currentTimeMillis();
-		addPlanet(mousePressedCoords[0], mousePressedCoords[1]);
+		if(e.isPopupTrigger()) planetAddMode = false;
+		else {
+			planetAddMode = true;
+			mousePressedCoords = getCoords(e);
+			timeMousePressed = System.currentTimeMillis();
+			addPlanet(mousePressedCoords[0], mousePressedCoords[1]);
+		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if(!planetAddMode) return;
+		
 		System.out.println("release!");
 		double[] mouseRealeasedCoords = getCoords(e);
 		double dragTimeMillis = System.currentTimeMillis() - timeMousePressed;
@@ -56,8 +64,6 @@ public class ParticleMouseController extends MouseInputAdapter {
 		//set initial velocities based on the direction dragged and the time spent dragging:
 		temp.setXVel(DRAG_FOR_VELOCITY_CONSTANT * (mouseRealeasedCoords[0] - mousePressedCoords[0]) / (dragTimeMillis / 1000));
 		temp.setYVel(DRAG_FOR_VELOCITY_CONSTANT * (mouseRealeasedCoords[1] - mousePressedCoords[1]) / (dragTimeMillis / 1000));
-		
-//		System.out.println("Vels: " + temp.getXVel() + ", " + temp.getYVel());
 		
 		simulation.particles.add(temp);
 		temp = null;
