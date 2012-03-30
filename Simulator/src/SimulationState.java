@@ -70,4 +70,37 @@ public class SimulationState implements Serializable {
 		return elasticCollisions;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		SimulationState other = (SimulationState)o;
+		return this.hashCode() == other.hashCode();
+	}
+	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		for(Particle p : particles) {
+			sb.append(p.hashCode());
+		}
+		sb.append(timeElapsed);
+		sb.append(timeInterval);
+		sb.append(gravConstant);
+		sb.append(elasticCollisions);
+		
+		return sb.toString();
+	}
+	
+	@Override
+	public int hashCode() {
+		StringBuffer sb = new StringBuffer();
+		for(Particle p : particles) {
+			sb.append(p.hashCode());
+		}
+		sb.append(timeElapsed);
+		sb.append(timeInterval);
+		sb.append(gravConstant);
+		sb.append(elasticCollisions);
+		
+		return this.toString().hashCode();
+	}
+	
 }

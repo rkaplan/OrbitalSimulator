@@ -43,7 +43,7 @@ public class Particle extends Circle implements Serializable {
 	}
 
 	public void moveStep(double timeInterval) {
-		
+
 		//update velocities:
 		for(int i = 0; i < vel.length; i++) {
 			vel[i] = vel[i] + accel[i] * timeInterval; //update the velocity based on acceleration
@@ -55,17 +55,17 @@ public class Particle extends Circle implements Serializable {
 
 		//update the trail:
 		trail.addPoint(x, y);
-		
-//		System.out.println("\tAfter stepping:");
-//		System.out.println("\tCoords: " + x + ", " + y);
-//		System.out.println("\tLatest collision is null? " + Boolean.toString(latestCollision == null));
-		
+
+		//		System.out.println("\tAfter stepping:");
+		//		System.out.println("\tCoords: " + x + ", " + y);
+		//		System.out.println("\tLatest collision is null? " + Boolean.toString(latestCollision == null));
+
 		//check to see if the particle from the previous collision is outside of the collision detection range,
 		//indicating that future collisions with that particle should be handled normally and no longer ignored:
 		if(latestCollision != null) {
 			if(!(Math.abs(x - latestCollision.getX()) < .5 && Math.abs(y - latestCollision.getY()) < .5))
 				latestCollision = null;
-				//TODO: handle when latestCollision is removed from the simulation (e.g. from inelastic collision)
+			//TODO: handle when latestCollision is removed from the simulation (e.g. from inelastic collision)
 		}
 
 	}
@@ -168,11 +168,11 @@ public class Particle extends Circle implements Serializable {
 	public void setPixRadius(int pixRadius) {
 		this.pixRadius = pixRadius;
 	}
-	
+
 	public Particle getLatestCollision() {
 		return latestCollision;
 	}
-	
+
 	public void setLatestCollision (Particle p) {
 		this.latestCollision = p;
 	}
@@ -200,6 +200,28 @@ public class Particle extends Circle implements Serializable {
 		}
 
 		return copy;
+	}
+
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+
+		sb.append(x);
+		sb.append(y);
+		sb.append(pixRadius);
+		sb.append(name);
+		for(int i = 0; i < vel.length; i++) {
+			sb.append(vel[i]);
+			sb.append(accel[i]);
+		}
+		sb.append(mass);
+		sb.append(trail.hashCode());
+		
+		return sb.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		return this.toString().hashCode();
 	}
 
 	//	//helpers:

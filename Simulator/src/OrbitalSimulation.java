@@ -148,7 +148,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 	 */
 	@Override
 	public void reset() {
-		this.control = (SimulationControl)super.control; //enables access to JFrame methods like repaint that are needed for some features
+		control = (SimulationControl)super.control; //enables access to JFrame methods like repaint that are needed for some features
 		
 		control.setValue("Name", "Planet");
 		control.setValue("X", 5);
@@ -166,6 +166,8 @@ public class OrbitalSimulation extends AbstractSimulation {
 				"Load a simulation from a .orbital file", this);
 		frame.addButton("saveState", "Save", 
 				"Save the current simulation to a file", this);
+		frame.addButton("stepBackState", "Undo", 
+				"Step back to the previous state of the simulation", this);
 		frame.addButton("clearSimulation", "Clear", 
 				"Clear all contents of the simulation", this);
 		frame.addButton("toggleCollisionType", "Toggle Elastic / Inelastic Collisions", 
@@ -191,9 +193,9 @@ public class OrbitalSimulation extends AbstractSimulation {
 		particles.add(initial);
 		particles.add(second);
 		
-		for(Particle particle : particles) {
-			frame.addDrawable(particle.getTrail());
-			frame.addDrawable(particle);
+		for(Particle p : particles) {
+			frame.addDrawable(p);
+			frame.addDrawable(p.getTrail());
 		}
 		
 		timeElapsed = 0;
@@ -217,7 +219,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 					loaded = (SimulationState)in.readObject();
 					in.close();
 					states.push(loaded);
-					pushCurrentStateAndRevertToState(loaded);
+					revertToState(loaded);
 				}
 				else control.println("Error: invalid file type");
 			}
@@ -237,8 +239,21 @@ public class OrbitalSimulation extends AbstractSimulation {
 		}
 	}
 	
+	public void stepBackState() {
+		if(states.size() >= 1) {
+			if(currentState().equals(states.peek()))
+				states.pop();
+			revertToState(states.pop());
+			cacheCurrentState();
+		}
+	}
+	
 	public void clearSimulation() {
-		pushCurrentStateAndRevertToState(new SimulationState(new ArrayList<Particle>(), timeElapsed, timeInterval, gravConstant, elasticCollisions));
+		SimulationState cleared = new SimulationState(new ArrayList<Particle>(), timeElapsed, timeInterval, gravConstant, elasticCollisions);
+		if(!currentState().equals(cleared)) {
+			revertToState(cleared);
+			cacheCurrentState();
+		}
 	}
 	
 	public void toggleCollisionType() {
@@ -247,9 +262,11 @@ public class OrbitalSimulation extends AbstractSimulation {
 		else control.println("Collision type changed to inelastic.");
 	}
 	
-	private void pushCurrentStateAndRevertToState(SimulationState state) {
+	public void cacheCurrentState() {
 		states.push(currentState());
-		
+	}
+	
+	private void revertToState(SimulationState state) {
 		particles = state.getParticles();
 		timeElapsed = state.getTimeElapsed();
 		timeInterval = state.getTimeInterval();

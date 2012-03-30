@@ -13,7 +13,7 @@ public class ParticleMouseController extends MouseInputAdapter {
 	
 	private OrbitalSimulation simulation;
 	private CoordinateStringBuilder coordinateStrBuilder;
-	private Particle temp;
+	private Particle tempParticle;
 	private double[] mousePressedCoords;
 	private long timeMousePressed;
 	private boolean planetAddMode;
@@ -23,27 +23,26 @@ public class ParticleMouseController extends MouseInputAdapter {
 		this.simulation = simulation;
 		coordinateStrBuilder = CoordinateStringBuilder.createCartesian();
 		planetAddMode = false;
-		temp = null;
+		tempParticle = null;
 	}
 	
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		System.out.println("clicky!");
+		
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		System.out.println("enter!");
+		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		System.out.println("exit!");
+		
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		System.out.println("press!");
 		if(e.isPopupTrigger()) planetAddMode = false;
 		else {
 			planetAddMode = true;
@@ -57,22 +56,22 @@ public class ParticleMouseController extends MouseInputAdapter {
 	public void mouseReleased(MouseEvent e) {
 		if(!planetAddMode) return;
 		
-		System.out.println("release!");
 		double[] mouseRealeasedCoords = getCoords(e);
 		double dragTimeMillis = System.currentTimeMillis() - timeMousePressed;
 		
 		//set initial velocities based on the direction dragged and the time spent dragging:
-		temp.setXVel(DRAG_FOR_VELOCITY_CONSTANT * (mouseRealeasedCoords[0] - mousePressedCoords[0]) / (dragTimeMillis / 1000));
-		temp.setYVel(DRAG_FOR_VELOCITY_CONSTANT * (mouseRealeasedCoords[1] - mousePressedCoords[1]) / (dragTimeMillis / 1000));
+		tempParticle.setXVel(DRAG_FOR_VELOCITY_CONSTANT * (mouseRealeasedCoords[0] - mousePressedCoords[0]) / (dragTimeMillis / 1000));
+		tempParticle.setYVel(DRAG_FOR_VELOCITY_CONSTANT * (mouseRealeasedCoords[1] - mousePressedCoords[1]) / (dragTimeMillis / 1000));
 		
-		simulation.particles.add(temp);
-		temp = null;
+		simulation.particles.add(tempParticle);
+		simulation.cacheCurrentState();
+		tempParticle = null;
 	}
 	
 	public void addPlanet(double x, double y) {
-		temp = new Particle("New Planet", x, y, 0, 0, 10, 10, PLANET_SPAWN_COLORS[new Random().nextInt(PLANET_SPAWN_COLORS.length)]);
-		simulation.frame.addDrawable(temp);
-		simulation.frame.addDrawable(temp.getTrail());
+		tempParticle = new Particle("New Planet", x, y, 0, 0, 10, 10, PLANET_SPAWN_COLORS[new Random().nextInt(PLANET_SPAWN_COLORS.length)]);
+		simulation.frame.addDrawable(tempParticle);
+		simulation.frame.addDrawable(tempParticle.getTrail());
 	}
 	
 	private double[] getCoords(MouseEvent e) {
