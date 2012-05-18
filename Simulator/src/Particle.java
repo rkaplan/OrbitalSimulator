@@ -92,8 +92,23 @@ public class Particle extends Circle implements Serializable {
 		Color newColor = new Color((p1.getColor().getRed() + p2.getColor().getRed()) / 2, 
 				(p1.getColor().getGreen() + p2.getColor().getGreen()) / 2, 
 				(p1.getColor().getGreen() + p2.getColor().getGreen()) / 2);
+		
+		double newX;
+		double newY;
+		if(p1.getPixRadius() > p2.getPixRadius()) {
+			newX = p1.getX();
+			newY = p1.getY();
+		}
+		else if(p2.getPixRadius() > p1.getPixRadius()) {
+			newX = p2.getX();
+			newY = p2.getY();
+		}
+		else {
+			newX = (p1.getX() + p2.getX())/2;
+			newY = (p1.getY() + p2.getY())/2;
+		}
 
-		return new Particle("Planet", p1.getX(), p1.getY(), newXVel, newYVel, p1.getMass() + p2.getMass(), newPixRadius, newColor);
+		return new Particle("Planet", newX, newY, newXVel, newYVel, p1.getMass() + p2.getMass(), newPixRadius, newColor);
 	}
 
 	public String getName() {
@@ -102,6 +117,15 @@ public class Particle extends Circle implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public double getX() {
+		return x;
+	}
+	
+	
+	public void setX(double x) {
+		this.x = x;
 	}
 
 	public double getXVel() {
@@ -112,6 +136,14 @@ public class Particle extends Circle implements Serializable {
 		vel[0] = xVel;
 	}
 
+	public double getY() {
+		return y;
+	}
+	
+	public void setY(double y) {
+		this.y = y;
+	}
+	
 	public double getYVel() {
 		return vel[1];
 	}

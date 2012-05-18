@@ -91,15 +91,6 @@ public class SimulationState implements Serializable {
 	
 	@Override
 	public int hashCode() {
-		StringBuffer sb = new StringBuffer();
-		for(Particle p : particles) {
-			sb.append(p.hashCode());
-		}
-		sb.append(timeElapsed);
-		sb.append(timeInterval);
-		sb.append(gravConstant);
-		sb.append(elasticCollisions);
-		
 		return this.toString().hashCode();
 	}
 	

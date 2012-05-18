@@ -13,15 +13,21 @@ import javax.swing.JFileChooser;
 import org.opensourcephysics.controls.AbstractSimulation;
 import org.opensourcephysics.controls.SimulationControl;
 import org.opensourcephysics.display.Drawable;
+import org.opensourcephysics.display.DrawingPanel;
 import org.opensourcephysics.frames.DisplayFrame;
 
 
 public class OrbitalSimulation extends AbstractSimulation {
 
-	private static final boolean DEBUG = false;
+	final private static boolean DEBUG = false;
 	
-	private static final int[] FRAME_LOCATION = {0, 0};
-	private static final int[] FRAME_DIMENSIONS = {800, 500};
+	final private static int[] FRAME_LOCATION = {0, 0};
+	final private static int[] FRAME_DIMENSIONS = {800, 500};
+	final private static double[] FRAME_PREFERRED_MINMAX = {-2E8, 2E8, -1E8, 1E8};
+	final public static int COLLISION_TOLERANCE_PIXELS = 3; //how many pixels "deep" one planet must graze another to trigger a collision
+	
+	final private static double SUN_MASS = 1.98892E30;
+	final private static double EARTH_MASS = 5.9742E24;
 	
 	protected SimulationControl control;
 	
@@ -131,7 +137,14 @@ public class OrbitalSimulation extends AbstractSimulation {
 	}
 	
 	private boolean haveCollided(Particle p1, Particle p2) {
-		if(!(Math.abs(p1.getX() - p2.getX()) < .5 && Math.abs(p1.getY() - p2.getY()) < .5)) //too far away
+		DrawingPanel framePanel = frame.getDrawingPanel();
+		int p1CenterPixelX = framePanel.xToPix(p1.getX());
+		int p1CenterPixelY = framePanel.yToPix(p1.getY());
+		int p2CenterPixelX = framePanel.xToPix(p2.getX());
+		int p2CenterPixelY = framePanel.yToPix(p2.getY());
+		int pixelDistance = (int)Math.round(distance(p1CenterPixelX, p1CenterPixelY, p2CenterPixelX, p2CenterPixelY));
+		
+		if(pixelDistance + COLLISION_TOLERANCE_PIXELS > p1.getPixRadius() + p2.getPixRadius())
 			return false;
 
 		else if(p1.getLatestCollision() == null || p2.getLatestCollision() == null) //their collision definitely hasn't already been computed
@@ -141,70 +154,6 @@ public class OrbitalSimulation extends AbstractSimulation {
 			return false; //don't count this time as a collision because it's already been computed
 		
 		return true;
-	}
-	
-	/**
-	 * Sets available fields and their default values in the controller.
-	 */
-	@Override
-	public void reset() {
-		control = (SimulationControl)super.control; //enables access to JFrame methods like repaint that are needed for some features
-		
-		control.setValue("Name", "Planet");
-		control.setValue("X", 5);
-		control.setValue("Y", 0);
-		control.setValue("X Velocity", 0);
-		control.setValue("Y Velocity", 0);
-		control.setValue("Radius", 10);
-		control.setValue("Time Interval", .01);
-	}
-	
-	@Override
-	public void initialize() {
-		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
-		frame.addButton("loadState", "Load", 
-				"Load a simulation from a .orbital file", this);
-		frame.addButton("saveState", "Save", 
-				"Save the current simulation to a file", this);
-		frame.addButton("stepBackState", "Undo", 
-				"Step back to the previous state of the simulation", this);
-		frame.addButton("clearSimulation", "Clear", 
-				"Clear all contents of the simulation", this);
-		frame.addButton("toggleCollisionType", "Toggle Elastic / Inelastic Collisions", 
-				"Change whether particles bounce off of each other or merge when they collide", this);
-		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
-		frame.setSize(new Dimension(FRAME_DIMENSIONS[0], FRAME_DIMENSIONS[1]));
-		frame.setVisible(true);
-		
-		pmc = new ParticleMouseController(this);
-		frame.getDrawingPanel().addMouseListener(pmc);
-		frame.getDrawingPanel().addMouseMotionListener(pmc);
-		
-		fileChooser = new JFileChooser(System.getProperty("user.dir"));
-		
-		this.setDelayTime(10);
-		
-		Particle initial = new Particle(control.getString("Name"), control.getDouble("X"), control.getDouble("Y"),
-				control.getDouble("X Velocity"), control.getDouble("Y Velocity"), 10, control.getInt("Radius"), Color.RED);
-		
-		Particle second = new Particle("Test", 0, 0, 0, 0, 100, 10, Color.BLUE);
-		
-		particles = new ArrayList<Particle>();
-		particles.add(initial);
-		particles.add(second);
-		
-		for(Particle p : particles) {
-			frame.addDrawable(p);
-			frame.addDrawable(p.getTrail());
-		}
-		
-		timeElapsed = 0;
-		timeInterval = control.getDouble("Time Interval");
-		gravConstant = 6.67;
-		elasticCollisions = false;
-		
-		states = new Stack<SimulationState>();
-		states.add(currentState());
 	}
 	
 	public void loadState() {
@@ -221,7 +170,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 					states.push(loaded);
 					revertToState(loaded);
 				}
-				else control.println("Error: invalid file type");
+				else control.println("Error: invalid file type (file must end in .orbital)");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -299,6 +248,77 @@ public class OrbitalSimulation extends AbstractSimulation {
 	
 	public static double distance(double x1, double y1, double x2, double y2) {
 		return Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+	}
+	
+	/**
+	 * Sets available fields and their default values in the controller.
+	 */
+	@Override
+	public void reset() {
+		control = (SimulationControl)super.control; //enables access to JFrame methods like repaint that are needed for some features
+		
+		control.setValue("Name", "Earth");
+		control.setValue("X", 1.5E8);
+		control.setValue("Y", 0);
+		control.setValue("X Velocity", 0);
+		control.setValue("Y Velocity", 3E5);
+		control.setValue("Radius", 10);
+		control.setValue("Mass", EARTH_MASS);
+		control.setValue("Time Interval", .01);
+		control.setValue("Gravitational Constant", 6.67384E-8);
+		
+	}
+	
+	@Override
+	public void initialize() {
+		frame = new DisplayFrame("X", "Y", "Orbital Simulation");
+		frame.addButton("loadState", "Load", 
+				"Load a simulation from a .orbital file", this);
+		frame.addButton("saveState", "Save", 
+				"Save the current simulation to a file", this);
+		frame.addButton("stepBackState", "Undo", 
+				"Step back to the previous state of the simulation", this);
+		frame.addButton("clearSimulation", "Clear", 
+				"Clear all contents of the simulation", this);
+		frame.addButton("toggleCollisionType", "Toggle Elastic / Inelastic Collisions", 
+				"Change whether particles bounce off of each other or merge when they collide", this);
+		frame.setLocation(FRAME_LOCATION[0], FRAME_LOCATION[1]);
+		frame.setSize(new Dimension(FRAME_DIMENSIONS[0], FRAME_DIMENSIONS[1]));
+		frame.setPreferredMinMax(FRAME_PREFERRED_MINMAX[0], FRAME_PREFERRED_MINMAX[1], FRAME_PREFERRED_MINMAX[2], FRAME_PREFERRED_MINMAX[3]);
+		frame.setVisible(true);
+		
+		pmc = new ParticleMouseController(this);
+		frame.getDrawingPanel().addMouseListener(pmc);
+		frame.getDrawingPanel().addMouseMotionListener(pmc);
+		
+		fileChooser = new JFileChooser(System.getProperty("user.dir"));
+		
+		this.setDelayTime(10);
+		
+		Particle planet = new Particle(control.getString("Name"), control.getDouble("X"), control.getDouble("Y"),
+				control.getDouble("X Velocity"), control.getDouble("Y Velocity"), control.getDouble("Mass"), control.getInt("Radius"), Color.CYAN);
+		
+		Particle star = new Particle("Sun", 0, 0, 0, 0, SUN_MASS, 10, Color.ORANGE);
+		
+//		double radius = distance(star.getX(), star.getY(), planet.getX(), planet.getY());
+//		frame.setPreferredMinMax(1.1 * (star.getX() - radius), 1.1 * (star.getX() + radius), 1.1 * (star.getY() - radius), 1.1 * (star.getY() + radius));
+		
+		particles = new ArrayList<Particle>();
+		particles.add(planet);
+		particles.add(star);
+		
+		for(Particle p : particles) {
+			frame.addDrawable(p);
+			frame.addDrawable(p.getTrail());
+		}
+		
+		timeElapsed = 0;
+		timeInterval = control.getDouble("Time Interval");
+		gravConstant = control.getDouble("Gravitational Constant");
+		elasticCollisions = false;
+		
+		states = new Stack<SimulationState>();
+		states.add(currentState());
 	}
 
 	public static void main(String[] args) {

@@ -9,7 +9,8 @@ import org.opensourcephysics.display.axes.CoordinateStringBuilder;
 
 public class ParticleMouseController extends MouseInputAdapter {
 
-	final static double DRAG_FOR_VELOCITY_CONSTANT = .1;
+	final static double DRAG_FOR_VELOCITY_CONSTANT = .3;
+	final static double NEW_PLANET_MASS = 5.9742E24;
 	
 	private OrbitalSimulation simulation;
 	private CoordinateStringBuilder coordinateStrBuilder;
@@ -17,7 +18,7 @@ public class ParticleMouseController extends MouseInputAdapter {
 	private double[] mousePressedCoords;
 	private long timeMousePressed;
 	private boolean planetAddMode;
-	final private static Color[] PLANET_SPAWN_COLORS = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.ORANGE, Color.MAGENTA};
+	final private static Color[] PLANET_SPAWN_COLORS = {Color.RED, Color.BLUE, Color.BLACK, Color.PINK, Color.GREEN, Color.MAGENTA};
 	
 	public ParticleMouseController(OrbitalSimulation simulation) {
 		this.simulation = simulation;
@@ -69,7 +70,7 @@ public class ParticleMouseController extends MouseInputAdapter {
 	}
 	
 	public void addPlanet(double x, double y) {
-		tempParticle = new Particle("New Planet", x, y, 0, 0, 10, 10, PLANET_SPAWN_COLORS[new Random().nextInt(PLANET_SPAWN_COLORS.length)]);
+		tempParticle = new Particle("New Planet", x, y, 0, 0, NEW_PLANET_MASS, 10, PLANET_SPAWN_COLORS[new Random().nextInt(PLANET_SPAWN_COLORS.length)]);
 		simulation.frame.addDrawable(tempParticle);
 		simulation.frame.addDrawable(tempParticle.getTrail());
 	}
