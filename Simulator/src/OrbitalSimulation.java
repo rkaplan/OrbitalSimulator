@@ -23,15 +23,18 @@ public class OrbitalSimulation extends AbstractSimulation {
 	
 	final private static int[] FRAME_LOCATION = {0, 0};
 	final private static int[] FRAME_DIMENSIONS = {800, 500};
-	final private static double[] FRAME_PREFERRED_MINMAX = {-2E8, 2E8, -1E8, 1E8};
+	final private static double[] FRAME_PREFERRED_MINMAX = {-7E6, 7E6, -3.5E6, 3.5E6}; //scale at which the frame starts
 	final public static int COLLISION_TOLERANCE_PIXELS = 3; //how many pixels "deep" one planet must graze another to trigger a collision
 	
 	final private static double SUN_MASS = 1.98892E30;
 	final private static double EARTH_MASS = 5.9742E24;
+	final private static double EARTH_ORBIT_RADIUS = 1.5E8;
+	final private static double EARTH_TANGENTIAL_VELOCITY = 1.08E5; //km/h
 	
 	protected SimulationControl control;
 	
 	protected DisplayFrame frame;
+	protected DrawingPanel drawingPanel;
 	protected Stack<SimulationState> states;
 	protected List<Particle> particles;
 	protected ParticleMouseController pmc; //for detecting MouseEvents and triggering appropriate OrbitalSimulation responses
@@ -50,6 +53,13 @@ public class OrbitalSimulation extends AbstractSimulation {
 		moveParticles();
 		
 		timeElapsed += timeInterval;
+		
+		if(DEBUG) {
+			System.out.println("\nParticle positions:");
+			for(int i = 0; i < particles.size(); i++) {
+				System.out.println("Particle " + i + ": X = " + particles.get(i).getX() + ", Y =" + particles.get(i).getY());
+			}
+		}
 	}
 	
 	private void updateAccelerations() {
@@ -137,17 +147,16 @@ public class OrbitalSimulation extends AbstractSimulation {
 	}
 	
 	private boolean haveCollided(Particle p1, Particle p2) {
-		DrawingPanel framePanel = frame.getDrawingPanel();
-		int p1CenterPixelX = framePanel.xToPix(p1.getX());
-		int p1CenterPixelY = framePanel.yToPix(p1.getY());
-		int p2CenterPixelX = framePanel.xToPix(p2.getX());
-		int p2CenterPixelY = framePanel.yToPix(p2.getY());
+		int p1CenterPixelX = drawingPanel.xToPix(p1.getX());
+		int p1CenterPixelY = drawingPanel.yToPix(p1.getY());
+		int p2CenterPixelX = drawingPanel.xToPix(p2.getX());
+		int p2CenterPixelY = drawingPanel.yToPix(p2.getY());
 		int pixelDistance = (int)Math.round(distance(p1CenterPixelX, p1CenterPixelY, p2CenterPixelX, p2CenterPixelY));
 		
 		if(pixelDistance + COLLISION_TOLERANCE_PIXELS > p1.getPixRadius() + p2.getPixRadius())
 			return false;
 
-		else if(p1.getLatestCollision() == null || p2.getLatestCollision() == null) //their collision definitely hasn't already been computed
+		else if(p1.getLatestCollision() == null || p2.getLatestCollision() == null) //their collision hasn't already been computed
 			return true;
 		
 		else if(p1.getLatestCollision().equals(p2) || p2.getLatestCollision().equals(p1))
@@ -207,8 +216,7 @@ public class OrbitalSimulation extends AbstractSimulation {
 	
 	public void toggleCollisionType() {
 		elasticCollisions = !elasticCollisions;
-		if(elasticCollisions) control.println("Collision type changed to elastic.");
-		else control.println("Collision type changed to inelastic.");
+		control.println("Collision type changed to " + (elasticCollisions ? "elastic" : "inelastic") + ".");
 	}
 	
 	public void cacheCurrentState() {
@@ -258,15 +266,14 @@ public class OrbitalSimulation extends AbstractSimulation {
 		control = (SimulationControl)super.control; //enables access to JFrame methods like repaint that are needed for some features
 		
 		control.setValue("Name", "Earth");
-		control.setValue("X", 1.5E8);
+		control.setValue("X", EARTH_ORBIT_RADIUS / 20); // /20 is there because bugs currently prevent accurate simulation with correct numbers
 		control.setValue("Y", 0);
 		control.setValue("X Velocity", 0);
-		control.setValue("Y Velocity", 3E5);
+		control.setValue("Y Velocity", EARTH_TANGENTIAL_VELOCITY * 20); // *20 is there because bugs currently prevent accurate simulation with correct numbers
 		control.setValue("Radius", 10);
 		control.setValue("Mass", EARTH_MASS);
 		control.setValue("Time Interval", .01);
-		control.setValue("Gravitational Constant", 6.67384E-8);
-		
+		control.setValue("Gravitational Constant", 6.67384E-11);
 	}
 	
 	@Override
@@ -288,20 +295,22 @@ public class OrbitalSimulation extends AbstractSimulation {
 		frame.setVisible(true);
 		
 		pmc = new ParticleMouseController(this);
-		frame.getDrawingPanel().addMouseListener(pmc);
-		frame.getDrawingPanel().addMouseMotionListener(pmc);
+		
+		drawingPanel = frame.getDrawingPanel();
+		drawingPanel.addMouseListener(pmc);
+		drawingPanel.addMouseMotionListener(pmc);
 		
 		fileChooser = new JFileChooser(System.getProperty("user.dir"));
 		
-		this.setDelayTime(10);
+		this.setDelayTime(10); //minimum possible delay between frame refreshes
 		
 		Particle planet = new Particle(control.getString("Name"), control.getDouble("X"), control.getDouble("Y"),
 				control.getDouble("X Velocity"), control.getDouble("Y Velocity"), control.getDouble("Mass"), control.getInt("Radius"), Color.CYAN);
 		
 		Particle star = new Particle("Sun", 0, 0, 0, 0, SUN_MASS, 10, Color.ORANGE);
 		
-//		double radius = distance(star.getX(), star.getY(), planet.getX(), planet.getY());
-//		frame.setPreferredMinMax(1.1 * (star.getX() - radius), 1.1 * (star.getX() + radius), 1.1 * (star.getY() - radius), 1.1 * (star.getY() + radius));
+		double radius = distance(star.getX(), star.getY(), planet.getX(), planet.getY());
+		frame.setPreferredMinMax(1.1 * (star.getX() - radius), 1.1 * (star.getX() + radius), 1.1 * (star.getY() - radius), 1.1 * (star.getY() + radius));
 		
 		particles = new ArrayList<Particle>();
 		particles.add(planet);

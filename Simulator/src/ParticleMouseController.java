@@ -9,7 +9,7 @@ import org.opensourcephysics.display.axes.CoordinateStringBuilder;
 
 public class ParticleMouseController extends MouseInputAdapter {
 
-	final static double DRAG_FOR_VELOCITY_CONSTANT = .3;
+	final static double DRAG_FOR_VELOCITY_CONSTANT = .2;
 	final static double NEW_PLANET_MASS = 5.9742E24;
 	
 	private OrbitalSimulation simulation;
